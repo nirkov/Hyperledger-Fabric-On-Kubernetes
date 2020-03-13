@@ -1,0 +1,293 @@
+########################################################################################################
+#
+#                                      Configtx file
+#
+# The configtxgen tool is used to create configuration artifacts for orderer, channel etc.
+# Configtxgen consume a file named Configtx.yaml which contains the definitions of the network.
+# The file also define consortium for defining the chanels between organizations.
+# https://hyperledger-fabric.readthedocs.io/en/release-1.4/access_control.html#how-acls-are-formatted-in-configtx-yaml
+#
+#                                          TERMS:
+#
+# MSP - MSP is a component that defines the rules that govern the valid identities for this
+#       organization. The default MSP implementation in Fabric uses X.509 certificates as 
+#       identities, adopting a traditional Public Key Infrastructure (PKI) hierarchical model 
+#       In particular, MSP abstracts away all cryptographic mechanisms and protocols behind 
+#       issuing and validating certificates, and user authentication. An MSP may define their
+#       own notion of identity, and the rules by which those identities are governed
+#       (identity validation) and authenticated (signature generation and verification).
+#       https://hyperledger-fabric.readthedocs.io/en/release-1.4/msp.html
+#
+# MSPDir - MSPDir is the filesystem path which contains the MSP configuration
+########################################################################################################
+
+
+
+# =================================================================================================
+#                                           ORGANIZETIONS
+# =================================================================================================
+# https://hyperledger-fabric.readthedocs.io/en/release-1.4/kafka.html#steps
+Organizations:
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererMSP
+        MSPDir: crypto-config/ordererOrganizations/example.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+
+    - &Org1
+        Name: Org1MSP
+        ID: Org1MSP
+        MSPDir: crypto-config/peerOrganizations/org1.example.com/msp
+        # Using for "gossip" - A fundamental element of the network so that peers
+        # can get to know each other and communicate with each other even though they
+        # are not linked at the beginning of the configuration. 
+        AnchorPeers:
+            - Host: org1peer1
+              Port: 30110
+            - Host: org1peer2
+              Port: 30110
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin', 'Org1MSP.peer', 'Org1MSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('Org1MSP.peer')"
+
+    - &Org2
+        Name: Org2MSP
+        ID: Org2MSP
+        MSPDir: crypto-config/peerOrganizations/org2.example.com/msp
+        AnchorPeers:
+            - Host: org2peer1
+              Port: 30110
+            - Host: org2peer2
+              Port: 30110
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('Org2MSP.admin', 'Org2MSP.peer', 'Org2MSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Org2MSP.admin', 'Org2MSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Org2MSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('Org2MSP.peer')"
+
+    - &Org3
+        Name: Org3MSP
+        ID: Org3MSP
+        MSPDir: crypto-config/peerOrganizations/org3.example.com/msp
+        AnchorPeers:
+            - Host: org3peer1
+              Port: 30110
+            - Host: org3peer2
+              Port: 30110
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('Org3MSP.admin', 'Org3MSP.peer', 'Org3MSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Org3MSP.admin', 'Org3MSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Org3MSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('Org3MSP.peer')"
+
+    - &Org4
+        Name: Org4MSP
+        ID: Org4MSP
+        MSPDir: crypto-config/peerOrganizations/org4.example.com/msp
+        AnchorPeers:
+            - Host: org4peer1
+              Port: 30110
+            - Host: org4peer2
+              Port: 30110
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('Org4MSP.admin', 'Org4MSP.peer', 'Org4MSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Org4MSP.admin', 'Org4MSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Org4MSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('Org4MSP.peer')"
+
+# =================================================================================================
+#                                           CAPABILITIES
+# =================================================================================================
+
+Capabilities:
+    # Apply for both Orderers and Peers
+    Channel: &ChannelCapabilities
+        V2_0: true
+
+    # Apply only for Orderers
+    Orderer: &OrdererCapabilities
+        V2_0: true
+
+    # Apply only for Peers
+    Application: &ApplicationCapabilities
+        V2_0: true
+
+# =================================================================================================
+#                                             ORDERER
+# =================================================================================================
+
+Orderer: &OrdererDefaults
+    OrdererType: kafka
+    Addresses:
+        - orderer:31010
+
+    # The time to waiting before creating a new batch
+    BatchTimeout: 1s
+    BatchSize:
+        # Maximum message in batch
+        MaxMessageCount: 100
+        AbsoluteMaxBytes: 90 MB
+        PreferredMaxBytes: 512 KB
+
+    # Kafka number of Broker should be minimum set to 4 for achieving crash fault tolerance
+    # (the minimum is 3 but 4 is for case that one Broker go down for a while). 
+    Kafka:
+        Brokers:
+            - kafka-statefulset-0.kafka-headless.default.svc.cluster.local:9093
+            - kafka-statefulset-1.kafka-headless.default.svc.cluster.local:9093
+            - kafka-statefulset-2.kafka-headless.default.svc.cluster.local:9093
+            - kafka-statefulset-3.kafka-headless.default.svc.cluster.local:9093
+
+    Organizations:
+
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        
+     # BlockValidation specifies what signatures must be included in the block
+        # from the orderer for the peer to validate it.
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+
+    Capabilities:
+        <<: *OrdererCapabilities
+
+# =================================================================================================
+#                                             CHANNEL
+# =================================================================================================
+
+Channel: &ChannelDefaults
+    Policies:
+        # Who may invoke the 'Deliver' API
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        # Who may invoke the 'Broadcast' API
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        # By default, who may modify elements at this config level
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+    Capabilities:
+        <<: *ChannelCapabilities
+
+# =================================================================================================
+#                                             APPLICATION
+# =================================================================================================
+
+Application: &ApplicationDefaults
+
+    Organizations:
+
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+# =================================================================================================
+#                                              PROFILES
+# =================================================================================================
+
+Profiles:
+    FourOrgsOrdererGenesis:
+        <<: *ChannelDefaults
+        Capabilities:
+            <<: *ChannelCapabilities
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        # specify which organizations this orderer is going to serve
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *Org1
+                    - *Org2
+                    - *Org3
+                    - *Org4
+
+    # FourOrgsChannel is the channel the our organizations are going to join                
+    FourOrgsChannel:
+        Consortium: SampleConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *Org1
+                - *Org2
+                - *Org3
+                - *Org4
+            Capabilities:
+                <<: *ApplicationCapabilities
+                

@@ -1,0 +1,231 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: org1peer2
+  labels:
+    componentType: peer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: org1peer2
+  template:
+    metadata:
+      labels:
+        name: org1peer2
+    spec:
+      volumes:
+      - name: fabricfiles
+        persistentVolumeClaim:
+          claimName: fabric-pvc
+      - name: dockersocket
+        hostPath:
+          path: /var/run/docker.sock
+      containers:
+      # =============================================================================================
+      #                                     HYPERLEDGER PEER CONTAINER
+      # =============================================================================================
+      - name: peer
+        image: hyperledger/fabric-peer:2.0
+        command: ["sh", "-c", "peer node start"]
+        env:
+        - name: CORE_PEER_ID
+          value: org1peer2-svc
+        - name: CORE_PEER_ADDRESS
+          value: org1peer2-svc:30110  
+        - name: CORE_PEER_GOSSIP_BOOTSTRAP
+          value: org1peer2-svc:30110 
+        - name: CORE_PEER_GOSSIP_ENDPOINT
+          value: org1peer2-svc:30110 
+        - name: CORE_PEER_MSPCONFIGPATH
+          value: /fabric/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp/ 
+        - name: CORE_PEER_GOSSIP_EXTERNALENDPOINT
+          value: org1peer2-svc:30110
+        - name: CORE_PEER_LOCALMSPID
+          value: Org1MSP
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: TZ
+        - name: CORE_PEER_ADDRESSAUTODETECT
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_ADDRESSAUTODETECT
+        - name: CORE_PEER_NETWORKID
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_NETWORKID
+        
+        - name: CORE_PEER_LISTENADDRESS
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_LISTENADDRESS
+        - name: CORE_PEER_EVENTS_ADDRESS
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_EVENTS_ADDRESS
+        - name: CORE_PEER_GOSSIP_ORGLEADER
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_GOSSIP_ORGLEADER
+        - name: CORE_PEER_GOSSIP_SKIPHANDSHAKE
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_GOSSIP_SKIPHANDSHAKE
+        - name: CORE_PEER_GOSSIP_USELEADERELECTION
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_GOSSIP_USELEADERELECTION 
+        - name: CORE_PEER_COMMITTER_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_COMMITTER_ENABLED
+        - name: CORE_PEER_PROFILE_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_PROFILE_ENABLED
+        - name: CORE_VM_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_VM_ENDPOINT
+        - name: CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN
+        - name: CORE_PBFT_GENERAL_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PBFT_GENERAL_MODE
+        - name: CORE_PBFT_GENERAL_N
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PBFT_GENERAL_N 
+        - name: CORE_LOGGING_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LOGGING_LEVEL
+        - name: CORE_LOGGING_PEER
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LOGGING_PEER 
+        - name: CORE_LOGGING_CAUTHDSL
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LOGGING_CAUTHDSL
+        - name: CORE_LOGGING_GOSSIP
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LOGGING_GOSSIP 
+        - name: CORE_LOGGING_LEDGER
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LOGGING_LEDGER
+        - name: CORE_LOGGING_MSP
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LOGGING_MSP
+        - name: CORE_LOGGING_POLICIES
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LOGGING_POLICIES 
+        - name: CORE_LOGGING_GRPC
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LOGGING_GRPC
+        - name: CORE_PEER_TLS_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_PEER_TLS_ENABLED 
+        - name: CORE_LEDGER_STATE_STATEDATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LEDGER_STATE_STATEDATABASE
+        - name: CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS
+        - name: CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME
+        - name: CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD 
+        - name: FABRIC_CFG_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: FABRIC_CFG_PATH
+        - name: ORDERER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: ORDERER_URL 
+        - name: GODEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: GODEBUG
+        - name: CORE_VM_DOCKER_ATTACHSTDOUT
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: CORE_VM_DOCKER_ATTACHSTDOUT
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        volumeMounts:
+        - mountPath: /fabric
+          name: fabricfiles
+        - mountPath: /host/var/run/docker.sock
+          name: dockersocket
+
+      # =============================================================================================
+      #                                        COUCH DB CONTAINER
+      # =============================================================================================
+      - name: couchdb
+        image: hyperledger/fabric-couchdb
+        env:
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              name: peer-configmap 
+              key: TZ
+        - name: COUCHDB_USER
+          value: "hyperledgeruser"
+        - name: COUCHDB_PASSWORD
+          value: "hyperledgerpass"
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "80m"
+          

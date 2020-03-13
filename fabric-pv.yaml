@@ -1,0 +1,18 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: fabric-pv
+  labels:
+    type: local
+    name: fabricfiles
+spec:
+  capacity:
+    storage: 16Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /home/nirkov/Desktop/fabric
+    server: 192.168.101.0
+    readOnly: false
